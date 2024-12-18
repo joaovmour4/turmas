@@ -5,6 +5,9 @@ interface SessionContextData{
     turmas: Array<ITurma>
     setTurmas: Function
     registrarIntegrante: Function
+    registrarTurma: Function
+    removerIntegrante: Function
+    removerTurma: Function
 }
 interface props{
     children: React.ReactNode
@@ -19,22 +22,9 @@ export function useSession(){
 }
 
 export const SessionProvider: React.FC<props> = ({ children }: props) => {
-    const [turmas, setTurmas] = React.useState<Array<ITurma>>([
-        {
-            id: 0,
-            name: '9º Ano A',
-            timeA: [],
-            timeB: []
-        },
-        {
-            id: 1,
-            name: '9º Ano B',
-            timeA: [],
-            timeB: []
-        },
-    ])
+    const [turmas, setTurmas] = React.useState<Array<ITurma>>([])
 
-    function registrarTurma(name: string){
+    function registrarTurma(name: string, navigation: any){
         setTurmas((prevTurmas: Array<ITurma>) => {
             return (
                 [...prevTurmas,
@@ -47,16 +37,38 @@ export const SessionProvider: React.FC<props> = ({ children }: props) => {
                 ]
             )
         })
+        navigation.goBack()
     }
 
     function registrarIntegrante(turma: ITurma, time: string, name: string){
-        const findTurma = turmas.find(arrayElement => arrayElement.id === turma.id)
-        if(time === 'timeA'){
-            findTurma?.timeA.push(name)
-        }else{
-            findTurma?.timeB.push(name)
-        }
-        setTurmas(turmas)
+        if(!name.length)
+            return null
+        setTurmas((prevTurmas: Array<ITurma>) =>
+            prevTurmas.map((item) =>
+              item.id === turma.id
+                ? (time === 'timeA' ? { ...item, timeA: [...item.timeA, name] } : { ...item, timeB: [...item.timeB, name] }) 
+                : item
+            )
+        );
+    }
+    function removerIntegrante(turma: ITurma, time: string, name: string){
+        setTurmas((prevTurmas: Array<ITurma>) =>
+            prevTurmas.map((item) =>
+                item.id === turma.id
+                  ? time === 'timeA'
+                    ? { ...item, timeA: item.timeA.filter((player) => player !== name) }
+                    : { ...item, timeB: item.timeB.filter((player) => player !== name) }
+                  : item
+            )
+        );
+    }
+    function removerTurma(turma: ITurma, navigation: any){
+        setTurmas((prevTurmas: Array<ITurma>) => {
+            return (
+                prevTurmas.filter(arrTurma => arrTurma.id !== turma.id)
+            )
+        })
+        navigation.goBack()
     }
 
     return(
@@ -64,7 +76,10 @@ export const SessionProvider: React.FC<props> = ({ children }: props) => {
             value={{
                 turmas, 
                 setTurmas,
-                registrarIntegrante
+                registrarIntegrante,
+                registrarTurma,
+                removerIntegrante,
+                removerTurma
             }}>
             {children}
         </Context.Provider>

@@ -2,9 +2,10 @@ import { StyleSheet } from 'react-native'
 import { useRoute } from '@react-navigation/native'
 import React from 'react'
 import { ITurma } from '../types/Types'
-import styled from 'styled-components/native'
+import styled, { css } from 'styled-components/native'
 import { useSession } from '../contexts/SessionContext'
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler'
+import PersonCard from '../components/PersonCard'
 
 const View = styled.View`
   background-color: #202024;
@@ -68,21 +69,59 @@ const InputContainer = styled.View`
 `
 const Input = styled.TextInput`
   flex: 1;
+  color: white;
 `
 const AddIcon = styled.Image`
   height: 24px;
   width: 24px;
   margin-right: 10px;
 `
-export default function Turma() {
+const TimesContainer = styled.View`
+  flex-direction: row;
+  align-items: start;
+  gap: 10px;
+  padding: 20px 0 20px 0;
+`
+const Time = styled.TouchableOpacity<{ $unselected?: boolean; }>`
+  height: 38px;
+  border: 0.5px solid #00B37E;
+  justify-content: center;
+  padding: 0 10px 0 10px;
+  ${props => props.$unselected && css`
+      border: 0;
+    `
+  }
+`
+const TimeText = styled.Text<{ $unselected?: boolean; }>`
+  color: #FFFFFF;
+  ${props => props.$unselected && css`
+      color: #C4C4CC;
+    `
+  }
+`
+export default function Turma({ navigation }: any) {
   const route = useRoute()
-  const { turmas, setTurmas, registrarIntegrante } = useSession()
-  const { turma } = route.params as { turma: ITurma }
+  const { turmas, setTurmas, registrarIntegrante, removerTurma } = useSession()
+  const { id } = route.params as { id: number }
+  const [turma, setTurma] = React.useState<ITurma>()
   const [text, setText] = React.useState('')
+  const [time, setTime] = React.useState('timeA')
+
+  const teamsHandler = () => {
+    if(time === 'timeA')
+      setTime('timeB')
+    else
+      setTime('timeA')
+  }
+
+  React.useEffect(()=>{
+    setTurma(turmas.find(arrTurma => arrTurma.id === id))
+  }, [turmas])
+
   return (
     <View>
       <Header>
-        <Tytle>Turma {turma.name}</Tytle>
+        <Tytle>Turma {turma?.name}</Tytle>
         <Description>adicione a galera e separe os times</Description>
       </Header>
       <Container>
@@ -94,15 +133,52 @@ export default function Turma() {
             onChangeText={setText}
           />
           <TouchableOpacity
-            onPress={()=> registrarIntegrante()}
+            onPress={()=> {
+              registrarIntegrante(turma, time, text)
+              setText('')
+            }}
           >
             <AddIcon 
               source={require('../../assets/images/add-icon.png')}
             />
           </TouchableOpacity>
         </InputContainer>
+        <TimesContainer>
+          <Time onPress={teamsHandler} $unselected={time !== 'timeA'} >
+            <TimeText $unselected={time !== 'timeA'} >TIME A</TimeText>
+          </Time>
+          <Time onPress={teamsHandler} $unselected={time !== 'timeB'} >
+            <TimeText $unselected={time !== 'timeB'} >TIME B</TimeText>
+          </Time>
+        </TimesContainer>
+        {
+          time === 'timeA' ?
+            turma?.timeA.map(personName => {
+              return (
+                <PersonCard 
+                  key={personName}
+                  turma={turma}
+                  time={'timeA'}
+                  personName={personName}
+                />
+              )
+            })
+            :
+            turma?.timeB.map(personName => {
+              return (
+                <PersonCard 
+                  key={personName}
+                  turma={turma}
+                  time={'timeB'}
+                  personName={personName}
+                />
+              )
+            })
+          }
       </Container>
-      <RemoveTurma>
+      <RemoveTurma onPress={()=> {
+        removerTurma(turma, navigation)
+      }}>
         <Text>
           Remover Turma
         </Text>

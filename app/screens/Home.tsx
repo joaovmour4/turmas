@@ -43,13 +43,16 @@ const ListContainer = styled.View`
 const Button = styled.TouchableOpacity`
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: start;
   align-items: center;
   background-color: #29292E;
   height: 96px;
   border-radius: 6px;
-  
+  gap: 15px;
+  padding-left: 15px
 `;
+const ImageButton = styled.Image`
+`
 const CreateTurma = styled.TouchableOpacity`
   align-self: stretch;
   height: 56px;
@@ -83,8 +86,8 @@ export default function Home({ navigation }: any) {
 
   const { turmas, setTurmas } = useSession()
 
-  const handleNavigate = (turma: ITurma) => {
-    navigation.navigate('Turma', { turma })
+  const handleNavigate = (id: number) => {
+    navigation.navigate('Turma', { id })
   }
 
   return (
@@ -97,7 +100,10 @@ export default function Home({ navigation }: any) {
       <ListContainer>
         {turmas.map(turma => {
           return(
-            <Button key={turma.name} onPress={()=> handleNavigate(turma)}>
+            <Button key={turma.name} onPress={()=> handleNavigate(turma.id)}>
+              <ImageButton 
+                source={require('../../assets/images/image-turma.png')}
+              />
               <Text>
                 {turma.name}
               </Text>
